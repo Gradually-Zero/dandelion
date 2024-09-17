@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import { invoke } from '@tauri-apps/api'
+import { invoke } from '@tauri-apps/api/core'
 async function fetchMarkdownAst(filePath: string) {
   try {
     const jsonAst = await invoke<string>('get_markdown_ast', { filePath })
