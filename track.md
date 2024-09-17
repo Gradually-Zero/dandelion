@@ -15,3 +15,7 @@ Ok Err Some None
 unwrap except match ? map_err
 
 [2024 年了，11 款 Vue3 的 PC 端 UI 组件库怎么选？——Vue3 组件库推荐](https://juejin.cn/post/7359876671136301108)
+
+[Upgrade from Tauri 1.0](https://v2.tauri.app/start/migrate/from-tauri-1/)
+
+[Tauri Configuration](https://v2.tauri.app/reference/config/)

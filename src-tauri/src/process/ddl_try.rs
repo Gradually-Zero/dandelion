@@ -3,10 +3,14 @@ use serde::Serialize;
 use serde_json;
 use std::fs::File;
 use std::io::Read;
-use tauri::command;
+use tauri::{command, AppHandle};
+
+use crate::process::ddl_conf::DdlConf;
 
 #[command]
-pub fn get_markdown_ast(file_path: String) -> Result<String, MarkdownParseError> {
+pub fn get_markdown_ast(app: AppHandle, file_path: String) -> Result<String, MarkdownParseError> {
+    let path = DdlConf::get_conf_path(&app);
+    println!("{:?}", path);
     parse_markdown(&file_path)
 }
 
