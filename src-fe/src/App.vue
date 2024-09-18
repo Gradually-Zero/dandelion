@@ -1,16 +1,49 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
-async function fetchMarkdownAst(filePath: string) {
+import { open } from '@tauri-apps/plugin-dialog'
+import { listen } from '@tauri-apps/api/event'
+
+// 使用 ref 以便 Vue 能响应式更新
+const selected_file = ref<string>('')
+const jsonAst = ref<string>('')
+
+// 监听文件变化
+listen<string>('selected-change', (event) => {
+  selected_file.value = event.payload
+})
+
+// 获取文件
+onMounted(async () => {
   try {
-    const jsonAst = await invoke<string>('get_markdown_ast', { filePath })
-    console.log('jsonAst', jsonAst)
-    console.log('MDAST:', JSON.parse(jsonAst))
+    selected_file.value = await invoke<string>('get_selected_file')
   } catch (error) {
-    console.error('Error fetching MDAST:', error)
+    console.error('Error fetching selected file:', error)
+  }
+})
+
+const parseMd = async () => {
+  const temp = await invoke<string>('get_markdown_ast')
+  jsonAst.value = temp
+  console.log('jsonAst', jsonAst)
+  console.log('MDAST:', JSON.parse(temp))
+}
+
+const selectFile = async () => {
+  try {
+    const selectedPath = await open({
+      filters: [{ name: 'Markdown 文件', extensions: ['md'] }],
+      multiple: false
+    })
+
+    if (selectedPath) {
+      await invoke('set_selected_file', { filePath: selectedPath })
+    }
+  } catch (error) {
+    console.error('选择文件失败:', error)
   }
 }
-fetchMarkdownAst('./a.md')
 </script>
 
 <template>
@@ -21,8 +54,18 @@ fetchMarkdownAst('./a.md')
       <RouterLink to="/table">Table</RouterLink>
     </nav>
   </header>
-
   <RouterView />
+  <Suspense>
+    <template #default>
+      <div>选择的文件：{{ selected_file }}</div>
+    </template>
+    <template #fallback>
+      <div>加载中...</div>
+    </template>
+  </Suspense>
+  <v-btn @click="selectFile"> 选择文件 </v-btn>
+  <v-btn @click="parseMd"> 解析 </v-btn>
+  <div>{{ jsonAst }}</div>
 </template>
 
 <style scoped>
