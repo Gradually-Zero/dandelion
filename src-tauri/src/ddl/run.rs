@@ -5,13 +5,26 @@ use std::fs::File;
 use std::io::Read;
 use tauri::{command, AppHandle};
 
-use crate::process::ddl_conf::DdlConf;
+use crate::ddl::conf::DdlConf;
 
 #[command]
-pub fn get_markdown_ast(app: AppHandle, file_path: String) -> Result<String, MarkdownParseError> {
-    let path = DdlConf::get_conf_path(&app);
-    println!("{:?}", path);
-    parse_markdown(&file_path)
+pub fn get_selected_file(app: AppHandle) -> String {
+    DdlConf::get_selected_file_path(&app)
+}
+
+#[command]
+pub fn set_selected_file(app: AppHandle, file_path: String) {
+    let conf = DdlConf::load(&app).unwrap();
+    conf.amend(serde_json::json!({"selected_file_path": file_path})).unwrap().save(&app).unwrap();
+}
+
+#[command]
+pub fn get_markdown_ast(app: AppHandle) -> Result<String, MarkdownParseError> {
+    let selected_file_path = DdlConf::get_selected_file_path(&app);
+    if !selected_file_path.is_empty() {
+        println!("{:?}", selected_file_path);
+    }
+    parse_markdown(&selected_file_path)
 }
 
 #[derive(Debug, Serialize)]
