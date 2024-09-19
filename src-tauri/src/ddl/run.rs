@@ -21,8 +21,10 @@ pub fn set_selected_file(app: AppHandle, file_path: String) {
 #[command]
 pub fn get_markdown_ast(app: AppHandle) -> Result<String, MarkdownParseError> {
     let selected_file_path = DdlConf::get_selected_file_path(&app);
-    if !selected_file_path.is_empty() {
-        println!("{:?}", selected_file_path);
+    if selected_file_path.is_empty() {
+        return Err(MarkdownParseError {
+            message: "selected file path is null".to_string(),
+        });
     }
     parse_markdown(&selected_file_path)
 }
