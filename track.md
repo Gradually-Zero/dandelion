@@ -19,3 +19,5 @@ unwrap except match ? map_err
 [Upgrade from Tauri 1.0](https://v2.tauri.app/start/migrate/from-tauri-1/)
 
 [Tauri Configuration](https://v2.tauri.app/reference/config/)
+
+[Material Design Icons](https://pictogrammers.com/library/mdi/)

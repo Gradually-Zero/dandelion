@@ -24,10 +24,14 @@ onMounted(async () => {
 })
 
 const parseMd = async () => {
-  const temp = await invoke<string>('get_markdown_ast')
-  jsonAst.value = temp
-  console.log('jsonAst', jsonAst)
-  console.log('MDAST:', JSON.parse(temp))
+  try {
+    const temp = await invoke<string>('get_markdown_ast')
+    jsonAst.value = temp
+    console.log('jsonAst', jsonAst)
+    console.log('MDAST:', JSON.parse(temp))
+  } catch (error) {
+    console.log('parseMd', error)
+  }
 }
 
 const selectFile = async () => {
@@ -66,6 +70,19 @@ const selectFile = async () => {
   <v-btn @click="selectFile"> 选择文件 </v-btn>
   <v-btn @click="parseMd"> 解析 </v-btn>
   <div>{{ jsonAst }}</div>
+  <v-app>
+    <v-bottom-navigation>
+      <v-btn value="recent">
+        <v-icon>mdi-table-large</v-icon>
+      </v-btn>
+      <v-btn value="favorites">
+        <v-icon>mdi-application-outline</v-icon>
+      </v-btn>
+      <v-btn value="conf">
+        <v-icon>mdi-cog</v-icon>
+      </v-btn>
+    </v-bottom-navigation>
+  </v-app>
 </template>
 
 <style scoped>

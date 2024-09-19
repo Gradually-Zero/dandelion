@@ -17,6 +17,7 @@
     "clear": "sh ./clear.sh"
   },
   "dependencies": {
+    "@mdi/font": "^7.4.47",
     "@tauri-apps/api": "^2.0.0-rc.5",
     "@tauri-apps/plugin-dialog": "^2.0.0-rc.1",
     "pinia": "^2.2.2",
