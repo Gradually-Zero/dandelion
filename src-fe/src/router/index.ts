@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import Table from '../views/Table.vue'
+import HomeView from '../views/Home.vue'
+import ConfView from '../views/Conf.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,17 +11,17 @@ const router = createRouter({
       component: HomeView
     },
     {
-      path: '/write',
-      name: 'write',
+      path: '/find',
+      name: 'find',
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import('../views/write-message.vue')
+      component: () => import('../views/Find.vue')
     },
     {
-      path: '/table',
-      name: 'table',
-      component: Table
+      path: '/conf',
+      name: 'conf',
+      component: ConfView
     }
   ]
 })
