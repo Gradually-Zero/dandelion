@@ -7,7 +7,7 @@ import { listen } from '@tauri-apps/api/event'
 // 使用 ref 以便 Vue 能响应式更新
 const selected_file = ref<string>('')
 
-// 监听文件变化
+// 监听配置变化
 listen<string>('selected-change', (event) => {
   selected_file.value = event.payload
 })
@@ -38,6 +38,8 @@ const selectFile = async () => {
 </script>
 
 <template>
-  <div>选择的文件：{{ selected_file }}</div>
-  <v-btn @click="selectFile">选择文件</v-btn>
+  <el-space direction="vertical" alignment="start">
+    <div>选择的文件：{{ selected_file }}</div>
+    <el-button @click="selectFile" type="primary">选择文件</el-button>
+  </el-space>
 </template>
