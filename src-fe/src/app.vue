@@ -18,8 +18,8 @@ watch(
 
 <template>
   <el-container style="height: 100vh">
-    <el-aside width="200px">
-      <el-menu :default-active="current" :router="true">
+    <el-aside width="200px" style="border-right: 1px solid var(--el-menu-border-color);">
+      <el-menu :default-active="current" :router="true" style="border-right: 0;">
         <el-menu-item index="/">
           <el-icon><House /></el-icon>
           <span>Home</span>
