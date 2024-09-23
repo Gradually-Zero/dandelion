@@ -3,7 +3,6 @@ const CellPrefix = 'cell-'
 export function getFirstTableData(ast: MdastNode) {
   const tableData = []
   const tableHeader = []
-  console.log('ast', ast)
   if (ast.type === 'root') {
     const astc = ast.children
     const table = astc.find((child) => child.type === 'table')
@@ -43,6 +42,5 @@ export function getFirstTableData(ast: MdastNode) {
       }
     }
   }
-  console.log('tableData', tableData)
   return tableData
 }

@@ -5,3 +5,4 @@ find . -type d -name "dist" -exec rm -rf {} \;
 find . -type d -name "target" -exec rm -rf {} \;
 find . -type d -name "playwright-report" -exec rm -rf {} \;
 find . -type d -name "test-results" -exec rm -rf {} \;
+find . -type d -wholename "*/src-tauri/gen" -exec rm -rf {} \;
