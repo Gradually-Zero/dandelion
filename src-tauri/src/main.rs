@@ -7,7 +7,13 @@ use ddl::run;
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![run::get_selected_file, run::set_selected_file, run::get_markdown_ast])
+        .invoke_handler(tauri::generate_handler![
+            run::get_selected_file,
+            run::set_selected_file,
+            run::get_markdown_ast,
+            run::read_selected_file_content,
+            run::write_selected_file_content
+        ])
         .run(tauri::generate_context!())
         .expect("error while running dandelion application");
 }

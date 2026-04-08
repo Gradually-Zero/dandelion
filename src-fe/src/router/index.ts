@@ -19,6 +19,11 @@ const router = createRouter({
       component: () => import('../views/find.vue')
     },
     {
+      path: '/editor',
+      name: 'editor',
+      component: () => import('../views/editor.vue')
+    },
+    {
       path: '/conf',
       name: 'conf',
       component: ConfView
