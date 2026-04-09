@@ -1,5 +1,7 @@
+import type { AttributeContent, AlignKind, Position, ReferenceKind, Stop } from './basic'
+
 // MdastNode 类型定义
-type MdastNode =
+export type MdastNode =
   | Root
   | BlockQuote
   | FootnoteDefinition
@@ -35,19 +37,19 @@ type MdastNode =
   | Definition
   | Paragraph
 
-interface Root {
+export interface Root {
   type: 'root'
   children: MdastNode[]
   position?: Position
 }
 
-interface BlockQuote {
+export interface BlockQuote {
   type: 'blockQuote'
   children: MdastNode[]
   position?: Position
 }
 
-interface FootnoteDefinition {
+export interface FootnoteDefinition {
   type: 'footnoteDefinition'
   children: MdastNode[]
   position?: Position
@@ -56,7 +58,7 @@ interface FootnoteDefinition {
   label?: string // 可选的标签
 }
 
-interface MdxJsxFlowElement {
+export interface MdxJsxFlowElement {
   type: 'mdxJsxFlowElement'
   children: MdastNode[]
   position?: Position
@@ -65,7 +67,7 @@ interface MdxJsxFlowElement {
   attributes: AttributeContent[] // 属性内容数组
 }
 
-interface List {
+export interface List {
   type: 'list'
   children: MdastNode[]
   position?: Position
@@ -75,7 +77,7 @@ interface List {
   spread: boolean // 是否有空行分隔
 }
 
-interface MdxjsEsm {
+export interface MdxjsEsm {
   type: 'mdxjsEsm'
   // 字面量内容
   value: string
@@ -84,52 +86,52 @@ interface MdxjsEsm {
   stops: Stop[] // 包含 Stop 类型的数组
 }
 
-interface Toml {
+export interface Toml {
   type: 'toml'
   // 字面量内容
   value: string
   position?: Position
 }
 
-interface Yaml {
+export interface Yaml {
   type: 'yaml'
   // 字面量内容
   value: string
   position?: Position
 }
 
-interface Break {
+export interface Break {
   type: 'break'
   position?: Position
 }
 
-interface InlineCode {
+export interface InlineCode {
   type: 'inlineCode'
   // 文本内容
   value: string
   position?: Position
 }
 
-interface InlineMath {
+export interface InlineMath {
   type: 'inlineMath'
   // 文本内容
   value: string
   position?: Position
 }
 
-interface Delete {
+export interface Delete {
   type: 'delete'
   children: MdastNode[]
   position?: Position
 }
 
-interface Emphasis {
+export interface Emphasis {
   type: 'emphasis'
   children: MdastNode[]
   position?: Position
 }
 
-interface MdxTextExpression {
+export interface MdxTextExpression {
   type: 'mdxTextExpression'
   // 字面量内容
   value: string
@@ -138,7 +140,7 @@ interface MdxTextExpression {
   stops: Stop[] // 包含 Stop 类型的数组
 }
 
-interface FootnoteReference {
+export interface FootnoteReference {
   type: 'footnoteReference'
   position?: Position
   // 关联信息
@@ -146,14 +148,14 @@ interface FootnoteReference {
   label?: string // 可选标签
 }
 
-interface Html {
+export interface Html {
   type: 'html'
   // 文本内容
   value: string
   position?: Position
 }
 
-interface Image {
+export interface Image {
   type: 'image'
   position?: Position
   // 替代文本
@@ -164,7 +166,7 @@ interface Image {
   title?: string // 可选标题
 }
 
-interface ImageReference {
+export interface ImageReference {
   type: 'imageReference'
   position?: Position
   // 替代文本
@@ -177,7 +179,7 @@ interface ImageReference {
   label?: string // 可选标签
 }
 
-interface MdxJsxTextElement {
+export interface MdxJsxTextElement {
   type: 'mdxJsxTextElement'
   children: MdastNode[]
   position?: Position
@@ -187,7 +189,7 @@ interface MdxJsxTextElement {
   attributes: AttributeContent[] // 包含 AttributeContent 类型的数组
 }
 
-interface Link {
+export interface Link {
   type: 'link'
   children: MdastNode[]
   position?: Position
@@ -197,7 +199,7 @@ interface Link {
   title?: string // 可选标题
 }
 
-interface LinkReference {
+export interface LinkReference {
   type: 'linkReference'
   children: MdastNode[]
   position?: Position
@@ -209,20 +211,20 @@ interface LinkReference {
   label?: string // 可选标签
 }
 
-interface Strong {
+export interface Strong {
   type: 'strong'
   children: MdastNode[]
   position?: Position
 }
 
-interface Text {
+export interface Text {
   type: 'text'
   // 文本内容
   value: string
   position?: Position
 }
 
-interface Code {
+export interface Code {
   type: 'code'
   value: string // 文本内容
   position?: Position
@@ -231,7 +233,7 @@ interface Code {
   meta?: string // 可选自定义信息
 }
 
-interface Math {
+export interface Math {
   type: 'math'
   value: string // 文本内容
   position?: Position
@@ -239,7 +241,7 @@ interface Math {
   meta?: string // 可选自定义信息
 }
 
-interface MdxFlowExpression {
+export interface MdxFlowExpression {
   type: 'mdxFlowExpression'
   value: string // 文本内容
   position?: Position
@@ -247,7 +249,7 @@ interface MdxFlowExpression {
   stops: Stop[] // 包含 Stop 类型的数组
 }
 
-interface Heading {
+export interface Heading {
   type: 'heading'
   children: MdastNode[]
   position?: Position
@@ -255,7 +257,7 @@ interface Heading {
   depth: number // 介于 1 和 6 之间的深度
 }
 
-interface Table {
+export interface Table {
   type: 'table'
   children: MdastNode[]
   position?: Position
@@ -263,24 +265,24 @@ interface Table {
   align: AlignKind[] // 包含 AlignKind 类型的数组
 }
 
-interface ThematicBreak {
+export interface ThematicBreak {
   type: 'thematicBreak'
   position?: Position
 }
 
-interface TableRow {
+export interface TableRow {
   type: 'tableRow'
   children: MdastNode[]
   position?: Position
 }
 
-interface TableCell {
+export interface TableCell {
   type: 'tableCell'
   children: MdastNode[]
   position?: Position
 }
 
-interface ListItem {
+export interface ListItem {
   type: 'listItem'
   children: MdastNode[]
   position?: Position
@@ -289,7 +291,7 @@ interface ListItem {
   checked?: boolean | null // 是否完成 (true, false 或 null)
 }
 
-interface Definition {
+export interface Definition {
   type: 'definition'
   position?: Position
   // 资源
@@ -300,7 +302,7 @@ interface Definition {
   label?: string // 可选的标签
 }
 
-interface Paragraph {
+export interface Paragraph {
   type: 'paragraph'
   children: MdastNode[]
   position?: Position

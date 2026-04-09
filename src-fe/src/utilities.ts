@@ -1,3 +1,5 @@
+import type { MdastNode } from '@/interface/ast'
+
 const CellPrefix = 'cell-'
 
 export function getFirstTableData(ast: MdastNode) {

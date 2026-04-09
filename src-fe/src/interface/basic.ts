@@ -1,25 +1,25 @@
-interface Position {
+export interface Position {
   start: number
   end: number
 }
 
-interface AttributeContent {
+export interface AttributeContent {
   name: string
   value?: string
 }
 
-interface Stop {
+export interface Stop {
   start: number
   end: number
   source: string
 }
 
-interface ReferenceKind {
+export interface ReferenceKind {
   // 表示引用的类型
   type: string
 }
 
-enum AlignKind {
+export enum AlignKind {
   // 左对齐
   Left = 'left',
   // 右对齐

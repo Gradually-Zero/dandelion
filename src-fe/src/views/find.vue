@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 import { getFirstTableData } from '@/utilities'
+import type { MdastNode } from '@/interface/ast'
 
 const tableData = ref<Record<string, string | undefined>[]>([])
 const errorMessage = ref<string>('')
 const searchQuery = ref<string>('')
 const totalForCell1 = ref({ total: 0, count: 0 })
+let unlistenSelectedChange: (() => void) | undefined
+
+const clearTableState = () => {
+  tableData.value = []
+  errorMessage.value = ''
+  totalForCell1.value = { total: 0, count: 0 }
+}
 
 const parseMd = async () => {
   try {
@@ -16,6 +25,8 @@ const parseMd = async () => {
     const firstTableData = getFirstTableData(ast)
     tableData.value = firstTableData
   } catch (error) {
+    tableData.value = []
+    totalForCell1.value = { total: 0, count: 0 }
     if (error instanceof Error) {
       errorMessage.value = '解析失败: ' + error.message
     } else {
@@ -23,6 +34,31 @@ const parseMd = async () => {
     }
     console.log('parseMd error:', error)
   }
+}
+
+const refreshFromSelection = async (selectedFilePath?: string) => {
+  if (selectedFilePath !== undefined && !selectedFilePath) {
+    clearTableState()
+    return
+  }
+
+  try {
+    const currentSelectedFile = selectedFilePath ?? (await invoke<string>('get_selected_file'))
+    if (!currentSelectedFile) {
+      clearTableState()
+      return
+    }
+  } catch (error) {
+    clearTableState()
+    if (error instanceof Error) {
+      errorMessage.value = '解析失败: ' + error.message
+    } else {
+      errorMessage.value = '解析失败: 未知错误'
+    }
+    return
+  }
+
+  await parseMd()
 }
 
 const columns = [
@@ -64,8 +100,15 @@ watch(searchQuery, (newQuery) => {
   }
 })
 
-onMounted(() => {
-  parseMd()
+onMounted(async () => {
+  unlistenSelectedChange = await listen<string>('selected-change', async (event) => {
+    await refreshFromSelection(event.payload)
+  })
+  await refreshFromSelection()
+})
+
+onBeforeUnmount(() => {
+  unlistenSelectedChange?.()
 })
 </script>
 

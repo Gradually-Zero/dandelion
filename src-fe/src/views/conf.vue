@@ -1,24 +1,27 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onBeforeUnmount, onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
 import { listen } from '@tauri-apps/api/event'
 
 // 使用 ref 以便 Vue 能响应式更新
 const selected_file = ref<string>('')
-
-// 监听配置变化
-listen<string>('selected-change', (event) => {
-  selected_file.value = event.payload
-})
+let unlistenSelectedChange: (() => void) | undefined
 
 // 获取文件
 onMounted(async () => {
   try {
+    unlistenSelectedChange = await listen<string>('selected-change', (event) => {
+      selected_file.value = event.payload
+    })
     selected_file.value = await invoke<string>('get_selected_file')
   } catch (error) {
     console.error('Error fetching selected file:', error)
   }
+})
+
+onBeforeUnmount(() => {
+  unlistenSelectedChange?.()
 })
 
 const selectFile = async () => {

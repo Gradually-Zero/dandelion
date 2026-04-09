@@ -6,25 +6,64 @@ use std::io::Read;
 use std::path::Path;
 use tauri::{command, AppHandle};
 
-use crate::ddl::conf::DdlConf;
+use crate::ddl::conf::{ConfigError, DdlConf};
 
 #[command]
-pub fn get_selected_file(app: AppHandle) -> String {
+pub fn get_selected_file(app: AppHandle) -> Result<String, ConfigError> {
     DdlConf::get_selected_file_path(&app)
 }
 
 #[command]
-pub fn set_selected_file(app: AppHandle, file_path: String) {
-    let conf = DdlConf::load(&app).unwrap();
+pub fn get_editor_word_wrap(app: AppHandle) -> Result<String, ConfigError> {
+    DdlConf::get_editor_word_wrap(&app)
+}
+
+#[command]
+pub fn get_editor_theme(app: AppHandle) -> Result<String, ConfigError> {
+    DdlConf::get_editor_theme(&app)
+}
+
+#[command]
+pub fn set_selected_file(app: AppHandle, file_path: String) -> Result<(), ConfigError> {
+    let conf = DdlConf::load(&app)?;
     conf.amend(serde_json::json!({"selected_file_path": file_path}))
-        .unwrap()
+        ?
         .save(&app)
-        .unwrap();
+        ?;
+    Ok(())
+}
+
+#[command]
+pub fn set_editor_word_wrap(app: AppHandle, word_wrap: String) -> Result<(), ConfigError> {
+    let normalized_word_wrap = if word_wrap == "off" { "off" } else { "on" };
+    let conf = DdlConf::load(&app)?;
+    conf.amend(serde_json::json!({"editor_word_wrap": normalized_word_wrap}))
+        ?
+        .save(&app)
+        ?;
+    Ok(())
+}
+
+#[command]
+pub fn set_editor_theme(app: AppHandle, theme: String) -> Result<(), ConfigError> {
+    let normalized_theme = if theme == "vs" || theme == "vscode-dark-plus" {
+        theme.as_str()
+    } else {
+        "vs"
+    };
+    let conf = DdlConf::load(&app)?;
+    conf.amend(serde_json::json!({"editor_theme": normalized_theme}))
+        ?
+        .save(&app)
+        ?;
+    Ok(())
 }
 
 #[command]
 pub fn get_markdown_ast(app: AppHandle) -> Result<String, MarkdownParseError> {
-    let selected_file_path = DdlConf::get_selected_file_path(&app);
+    let selected_file_path = DdlConf::get_selected_file_path(&app).map_err(|e| MarkdownParseError {
+        message: e.message,
+    })?;
     if selected_file_path.is_empty() {
         return Err(MarkdownParseError {
             message: "selected file path is null".to_string(),
@@ -60,7 +99,9 @@ pub struct FileIoError {
 }
 
 fn get_selected_file_path(app: &AppHandle) -> Result<String, FileIoError> {
-    let selected_file_path = DdlConf::get_selected_file_path(app);
+    let selected_file_path = DdlConf::get_selected_file_path(app).map_err(|e| FileIoError {
+        message: e.message,
+    })?;
 
     if selected_file_path.is_empty() {
         return Err(FileIoError {
