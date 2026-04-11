@@ -158,7 +158,7 @@ fn sync_window_state<R: Runtime>(window: &Window<R>) -> Result<(), ConfigError> 
         Some(bounds)
     };
 
-    let mut conf = DdlConf::load(&app)?;
+    let mut conf = DdlConf::load(app)?;
     if let Some(bounds) = bounds {
         conf.window_x = Some(bounds.x);
         conf.window_y = Some(bounds.y);
@@ -166,7 +166,7 @@ fn sync_window_state<R: Runtime>(window: &Window<R>) -> Result<(), ConfigError> 
         conf.window_height = Some(bounds.height);
     }
     conf.window_maximized = is_maximized;
-    conf.save_silent(&app)
+    conf.save_silent(app)
 }
 
 fn sync_webview_window_state<R: Runtime>(window: &WebviewWindow<R>) -> Result<(), ConfigError> {
@@ -182,7 +182,7 @@ fn sync_webview_window_state<R: Runtime>(window: &WebviewWindow<R>) -> Result<()
         Some(bounds)
     };
 
-    let mut conf = DdlConf::load(&app)?;
+    let mut conf = DdlConf::load(app)?;
     if let Some(bounds) = bounds {
         conf.window_x = Some(bounds.x);
         conf.window_y = Some(bounds.y);
@@ -190,7 +190,7 @@ fn sync_webview_window_state<R: Runtime>(window: &WebviewWindow<R>) -> Result<()
         conf.window_height = Some(bounds.height);
     }
     conf.window_maximized = is_maximized;
-    conf.save_silent(&app)
+    conf.save_silent(app)
 }
 
 fn update_last_normal_bounds<R: Runtime>(window: &Window<R>) -> Result<(), ConfigError> {

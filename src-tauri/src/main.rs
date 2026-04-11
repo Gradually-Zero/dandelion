@@ -12,7 +12,7 @@ fn main() {
         .setup(|app| {
             // 主窗口在 tauri.conf.json 里以隐藏状态启动，
             // 这样可以先恢复上次的窗口位置和大小，再显示最终状态，避免启动时闪动。
-            window_state::restore_main_window(&app.handle())
+            window_state::restore_main_window(app.handle())
                 .map_err(|error| -> Box<dyn std::error::Error> { Box::new(error) })?;
             Ok(())
         })

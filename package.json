@@ -9,7 +9,7 @@
     "preview": "vite preview --config src-fe/vite.config.ts",
     "build-only": "vite build --config src-fe/vite.config.ts",
     "type-check": "vue-tsc --build src-fe --force",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "lint": "eslint src-fe --fix",
     "format": "prettier --write src-fe/src/",
     "tauri": "tauri",
     "clean": "sh ./clean.sh"
