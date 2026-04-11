@@ -9,13 +9,18 @@ use std::{
     io::{Read, Write},
     path::PathBuf,
 };
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, Runtime};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DdlConf {
     pub selected_file_path: String,
     pub editor_word_wrap: String,
     pub editor_theme: String,
+    pub window_x: Option<f64>,
+    pub window_y: Option<f64>,
+    pub window_width: Option<f64>,
+    pub window_height: Option<f64>,
+    pub window_maximized: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -24,7 +29,7 @@ pub struct ConfigError {
 }
 
 impl DdlConf {
-    pub fn get_conf_path(app: &AppHandle) -> Result<PathBuf, ConfigError> {
+    pub fn get_conf_path<R: Runtime>(app: &AppHandle<R>) -> Result<PathBuf, ConfigError> {
         let config_dir = app
             .path()
             .config_dir()
@@ -39,10 +44,27 @@ impl DdlConf {
             selected_file_path: "".to_string(),
             editor_word_wrap: "on".to_string(),
             editor_theme: "vs".to_string(),
+            window_x: None,
+            window_y: None,
+            window_width: None,
+            window_height: None,
+            window_maximized: false,
         }
     }
 
-    pub fn save(&self, app: &AppHandle) -> Result<(), ConfigError> {
+    pub fn save<R: Runtime>(&self, app: &AppHandle<R>) -> Result<(), ConfigError> {
+        self.save_internal(app, true)
+    }
+
+    pub fn save_silent<R: Runtime>(&self, app: &AppHandle<R>) -> Result<(), ConfigError> {
+        self.save_internal(app, false)
+    }
+
+    fn save_internal<R: Runtime>(
+        &self,
+        app: &AppHandle<R>,
+        notify_selected: bool,
+    ) -> Result<(), ConfigError> {
         let path = Self::get_conf_path(app)?;
 
         if let Some(dir) = path.parent() {
@@ -54,8 +76,10 @@ impl DdlConf {
         // dbg!(&contents);
         file.write_all(contents.as_bytes())
             .map_err(ConfigError::from_display)?;
-        notify_selected_change(app, self.selected_file_path.to_string())
-            .map_err(ConfigError::from_display)?;
+        if notify_selected {
+            notify_selected_change(app, self.selected_file_path.to_string())
+                .map_err(ConfigError::from_display)?;
+        }
         Ok(())
     }
 
@@ -71,14 +95,15 @@ impl DdlConf {
             config.insert(k, v);
         }
 
-        let config_str = serde_json::to_string_pretty(&config).map_err(ConfigError::from_display)?;
+        let config_str =
+            serde_json::to_string_pretty(&config).map_err(ConfigError::from_display)?;
         serde_json::from_str::<DdlConf>(&config_str).map_err(|err| {
             error!("[ddl_conf::amend] {}", err);
             ConfigError::from_display(err)
         })
     }
 
-    pub fn load(app: &AppHandle) -> Result<Self, ConfigError> {
+    pub fn load<R: Runtime>(app: &AppHandle<R>) -> Result<Self, ConfigError> {
         let path = Self::get_conf_path(app)?;
 
         if !path.exists() {
@@ -93,11 +118,12 @@ impl DdlConf {
             .map_err(ConfigError::from_display)?;
         let config: Result<DdlConf, _> = serde_json::from_str(&contents);
 
-        // Handle conditional fields and fallback to defaults if necessary
+        // 处理缺失字段的兼容情况，并在需要时回退到默认值
         if let Err(e) = &config {
             error!("[ddl_conf::load] {}", e);
             let mut default_config = Self::new();
-            let raw_contents = serde_json::from_str(&contents).map_err(ConfigError::from_display)?;
+            let raw_contents =
+                serde_json::from_str(&contents).map_err(ConfigError::from_display)?;
             default_config = default_config.amend(raw_contents)?;
             default_config.save(app)?;
             return Ok(default_config);
@@ -106,11 +132,11 @@ impl DdlConf {
         config.map_err(ConfigError::from_display)
     }
 
-    pub fn get_selected_file_path(app: &AppHandle) -> Result<String, ConfigError> {
+    pub fn get_selected_file_path<R: Runtime>(app: &AppHandle<R>) -> Result<String, ConfigError> {
         Ok(Self::load(app)?.selected_file_path)
     }
 
-    pub fn get_editor_word_wrap(app: &AppHandle) -> Result<String, ConfigError> {
+    pub fn get_editor_word_wrap<R: Runtime>(app: &AppHandle<R>) -> Result<String, ConfigError> {
         let editor_word_wrap = Self::load(app)?.editor_word_wrap;
 
         if editor_word_wrap == "off" {
@@ -120,7 +146,7 @@ impl DdlConf {
         Ok("on".to_string())
     }
 
-    pub fn get_editor_theme(app: &AppHandle) -> Result<String, ConfigError> {
+    pub fn get_editor_theme<R: Runtime>(app: &AppHandle<R>) -> Result<String, ConfigError> {
         let editor_theme = Self::load(app)?.editor_theme;
 
         if editor_theme == "vs" || editor_theme == "vscode-dark-plus" {
@@ -132,9 +158,17 @@ impl DdlConf {
 }
 
 impl ConfigError {
-    fn from_display(error: impl Display) -> Self {
+    pub(crate) fn from_display(error: impl Display) -> Self {
         Self {
             message: error.to_string(),
         }
     }
 }
+
+impl Display for ConfigError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for ConfigError {}

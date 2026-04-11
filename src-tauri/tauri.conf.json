@@ -19,6 +19,7 @@
         "height": 800,
         "resizable": true,
         "title": "dandelion",
+        "visible": false,
         "width": 1200
       }
     ]

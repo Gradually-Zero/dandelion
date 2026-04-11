@@ -294,8 +294,8 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
   }
 
   event.preventDefault()
-  // Keep this deprecated API for browser compatibility so the native leave prompt
-  // still appears on refresh, tab close, and direct navigation.
+  // 为了兼容浏览器，这里保留这个已废弃的接口，
+  // 这样在刷新、关闭标签页和直接跳转时，原生离开提示仍然会出现。
   event.returnValue = ''
 }
 

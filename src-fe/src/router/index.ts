@@ -13,9 +13,9 @@ const router = createRouter({
     {
       path: '/find',
       name: 'find',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
+      // 路由级代码分割
+      // 这会为该路由生成一个单独的 chunk (About.[hash].js)
+      // 并在访问该路由时按需懒加载。
       component: () => import('../views/find.vue')
     },
     {
