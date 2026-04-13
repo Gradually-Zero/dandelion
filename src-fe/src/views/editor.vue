@@ -60,7 +60,6 @@ let unlistenSelectedChange: (() => void) | undefined
 let unlistenCloseRequested: (() => void) | undefined
 let suppressModelUpdate = false
 let isLeaveConfirmOpen = false
-let isConfirmingWindowClose = false
 
 const isDirty = computed(() => draftContent.value !== savedContent.value)
 const hasSelectedFile = computed(() => currentFilePath.value.length > 0)
@@ -407,22 +406,13 @@ onMounted(async () => {
   window.addEventListener('beforeunload', handleBeforeUnload)
 
   unlistenCloseRequested = await appWindow.onCloseRequested(async (event) => {
-    if (!isDirty.value || isConfirmingWindowClose) {
+    if (!isDirty.value) {
       return
     }
 
-    event.preventDefault()
     const shouldLeave = await confirmLeaveEditor()
     if (!shouldLeave) {
-      return
-    }
-
-    isConfirmingWindowClose = true
-
-    try {
-      await appWindow.close()
-    } finally {
-      isConfirmingWindowClose = false
+      event.preventDefault()
     }
   })
 
