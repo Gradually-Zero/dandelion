@@ -15,7 +15,7 @@
     "clean": "sh ./clean.sh"
   },
   "dependencies": {
-    "@element-plus/icons-vue": "^2.3.2",
+    "@lucide/vue": "^1.8.0",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-dialog": "^2.7.0",
     "element-plus": "^2.13.6",
