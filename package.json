@@ -1,0 +1,17 @@
+{
+  "name": "dandelion",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "tauri": "tauri",
+    "clean": "sh ./scripts/clean.sh"
+  },
+  "workspaces": {
+    "packages": [
+      "ui-vue"
+    ]
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.0"
+  }
+}

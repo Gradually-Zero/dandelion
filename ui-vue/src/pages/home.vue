@@ -1,0 +1,5 @@
+<template>
+    <div class="flex h-full items-center justify-center text-(--p-text-muted-color)">
+        <h1 class="m-0 text-2xl font-semibold">dandelion</h1>
+    </div>
+</template>
