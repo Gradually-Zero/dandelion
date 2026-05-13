@@ -27,10 +27,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             run::get_selected_file,
             run::get_editor_word_wrap,
-            run::get_editor_theme,
+            run::get_ui_theme,
             run::set_selected_file,
             run::set_editor_word_wrap,
-            run::set_editor_theme,
+            run::set_ui_theme,
             run::get_markdown_ast,
             run::read_selected_file_content,
             run::write_selected_file_content

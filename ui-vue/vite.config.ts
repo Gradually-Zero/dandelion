@@ -8,6 +8,22 @@ const host = process.env.TAURI_DEV_HOST;
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: true,
+        manualChunks(id) {
+          if (id.includes('monaco-editor')) {
+            return 'monaco-editor';
+          }
+
+          if (id.includes('prettier')) {
+            return 'prettier';
+          }
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

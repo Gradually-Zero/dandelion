@@ -19,8 +19,8 @@ pub fn get_editor_word_wrap(app: AppHandle) -> Result<String, ConfigError> {
 }
 
 #[command]
-pub fn get_editor_theme(app: AppHandle) -> Result<String, ConfigError> {
-    DdlConf::get_editor_theme(&app)
+pub fn get_ui_theme(app: AppHandle) -> Result<String, ConfigError> {
+    DdlConf::get_ui_theme(&app)
 }
 
 #[command]
@@ -41,14 +41,15 @@ pub fn set_editor_word_wrap(app: AppHandle, word_wrap: String) -> Result<(), Con
 }
 
 #[command]
-pub fn set_editor_theme(app: AppHandle, theme: String) -> Result<(), ConfigError> {
-    let normalized_theme = if theme == "vs" || theme == "vscode-dark-plus" {
+pub fn set_ui_theme(app: AppHandle, theme: String) -> Result<(), ConfigError> {
+    let normalized_theme = if theme == "system" || theme == "light" || theme == "dark" {
         theme.as_str()
     } else {
-        "vs"
+        "system"
     };
+
     let conf = DdlConf::load(&app)?;
-    conf.amend(serde_json::json!({"editor_theme": normalized_theme}))?
+    conf.amend(serde_json::json!({"ui_theme": normalized_theme}))?
         .save(&app)?;
     Ok(())
 }

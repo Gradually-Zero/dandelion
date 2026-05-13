@@ -15,7 +15,7 @@ use tauri::{AppHandle, Manager, Runtime};
 pub struct DdlConf {
     pub selected_file_path: String,
     pub editor_word_wrap: String,
-    pub editor_theme: String,
+    pub ui_theme: String,
     pub window_x: Option<f64>,
     pub window_y: Option<f64>,
     pub window_width: Option<f64>,
@@ -43,7 +43,7 @@ impl DdlConf {
         Self {
             selected_file_path: "".to_string(),
             editor_word_wrap: "on".to_string(),
-            editor_theme: "vs".to_string(),
+            ui_theme: "system".to_string(),
             window_x: None,
             window_y: None,
             window_width: None,
@@ -146,14 +146,14 @@ impl DdlConf {
         Ok("on".to_string())
     }
 
-    pub fn get_editor_theme<R: Runtime>(app: &AppHandle<R>) -> Result<String, ConfigError> {
-        let editor_theme = Self::load(app)?.editor_theme;
+    pub fn get_ui_theme<R: Runtime>(app: &AppHandle<R>) -> Result<String, ConfigError> {
+        let ui_theme = Self::load(app)?.ui_theme;
 
-        if editor_theme == "vs" || editor_theme == "vscode-dark-plus" {
-            return Ok(editor_theme);
+        if ui_theme == "system" || ui_theme == "light" || ui_theme == "dark" {
+            return Ok(ui_theme);
         }
 
-        Ok("vs".to_string())
+        Ok("system".to_string())
     }
 }
 

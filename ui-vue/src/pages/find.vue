@@ -1,26 +1,82 @@
 <script setup lang="ts">
-import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import Message from 'primevue/message'
+import Toolbar from 'primevue/toolbar'
 import DataTable from 'primevue/datatable'
-import InputText from 'primevue/inputtext'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
+import { FilterMatchMode } from '@primevue/core/api';
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { getFirstTableData } from '@/utils'
+import ClearableInputText from '@/components/ClearableInputText.vue'
 import type { MdastNode } from '@/types/ast'
+import type { DataTableFilterEvent } from 'primevue/datatable'
 
-const tableData = ref<Record<string, string | undefined>[]>([])
+type TableDataRow = Record<string, string | undefined>
+
+type FindTableRow = Record<string, string | number | undefined> & {
+    index: number
+}
+
+type TextFilter = {
+    value: string | null
+    matchMode: string
+}
+
+type FindTableFilters = {
+    global: TextFilter
+    index: TextFilter
+    'cell-0': TextFilter
+    'cell-1': TextFilter
+    'cell-2': TextFilter
+    'cell-3': TextFilter
+}
+
+const filters = ref<FindTableFilters>({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    index: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    "cell-0": { value: null, matchMode: FilterMatchMode.CONTAINS },
+    "cell-1": { value: null, matchMode: FilterMatchMode.CONTAINS },
+    "cell-2": { value: null, matchMode: FilterMatchMode.CONTAINS },
+    "cell-3": { value: null, matchMode: FilterMatchMode.CONTAINS },
+});
+const globalFilterFields = ['index', 'cell-0', 'cell-1', 'cell-2', 'cell-3']
+const tableData = ref<TableDataRow[]>([])
+const filteredRows = ref<FindTableRow[]>([])
 const errorMessage = ref<string>('')
-const searchQuery = ref<string>('')
-const totalForCell1 = ref({ total: 0, count: 0 })
 let unlistenSelectedChange: (() => void) | undefined
+
+const tableRows = computed<FindTableRow[]>(() => {
+    return tableData.value.map((row, index) => ({ index: index + 1, ...row }))
+})
+
+const hasGlobalFilter = computed(() => {
+    return Boolean(filters.value.global.value?.trim())
+})
+
+const totalForCell1 = computed(() => {
+    if (!hasGlobalFilter.value) {
+        return { total: 0, count: 0 }
+    }
+
+    return filteredRows.value.reduce(
+        (result, row) => {
+            const value = parseFloat(String(row['cell-1'] ?? '0'))
+            if (!Number.isNaN(value)) {
+                result.total += value
+                result.count += 1
+            }
+
+            return result
+        },
+        { total: 0, count: 0 }
+    )
+})
 
 const clearTableState = () => {
     tableData.value = []
     errorMessage.value = ''
-    totalForCell1.value = { total: 0, count: 0 }
 }
 
 const parseMd = async () => {
@@ -32,13 +88,11 @@ const parseMd = async () => {
         tableData.value = firstTableData
     } catch (error) {
         tableData.value = []
-        totalForCell1.value = { total: 0, count: 0 }
         if (error instanceof Error) {
             errorMessage.value = '解析失败: ' + error.message
         } else {
             errorMessage.value = '解析失败: 未知错误'
         }
-        console.log('parseMd error:', error)
     }
 }
 
@@ -67,47 +121,12 @@ const refreshFromSelection = async (selectedFilePath?: string) => {
     await parseMd()
 }
 
-const columns = [
-    { title: '#', dataKey: 'index', width: 50 },
-    { title: 'Column 1', dataKey: 'cell-0', width: 150 },
-    { title: 'Column 2', dataKey: 'cell-1', width: 150 },
-    { title: 'Column 3', dataKey: 'cell-2', width: 150 },
-    { title: 'Column 4', dataKey: 'cell-3', width: '100%' }
-]
-
-const getColumnStyle = (width: number | string) => {
-    return typeof width === 'number' ? { width: `${width}px` } : { minWidth: '220px' }
+const handleFilter = (event: DataTableFilterEvent) => {
+    filteredRows.value = (event.filteredValue ?? tableRows.value) as FindTableRow[]
 }
 
-const filteredData = computed<any[]>(() => {
-    if (!searchQuery.value) {
-        return tableData.value.map((row, index) => ({ index: index + 1, ...row }))
-    }
-    return tableData.value
-        .filter((row) =>
-            Object.values(row).some(
-                (val) => val && val.toLowerCase().includes(searchQuery.value.toLowerCase())
-            )
-        )
-        .map((row, index) => ({ index: index + 1, ...row })) // 添加索引
-})
-
-watch(searchQuery, (newQuery) => {
-    if (newQuery && newQuery.trim().length > 0) {
-        let total = 0
-        let count = 0
-        filteredData.value.forEach((row) => {
-            const value = parseFloat(row['cell-1'] || '0')
-            if (!isNaN(value)) {
-                // 确保是有效的数字
-                total += value
-                count++
-            }
-        })
-        totalForCell1.value = { total, count }
-    } else {
-        totalForCell1.value = { total: 0, count: 0 }
-    }
+watch(tableRows, (rows) => {
+    filteredRows.value = rows
 })
 
 onMounted(async () => {
@@ -123,33 +142,59 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <Card :pt="{
-        root: 'h-full overflow-hidden',
-        body: 'h-full flex flex-col p-0',
-        header: 'px-5 py-4 border-b border-(--p-surface-200)',
-        content: 'min-h-0 flex-1 px-5 pb-5 pt-0'
-    }">
+    <DataTable v-model:filters="filters" :value="tableRows" :globalFilterFields="globalFilterFields" filterDisplay="row"
+        scrollable scroll-height="flex" :virtual-scroller-options="{ itemSize: 44 }" :pt="{ tableContainer: 'h-full' }"
+        @filter="handleFilter">
         <template #header>
-            <div class="flex items-center justify-between gap-2">
-                <div class="flex w-75 items-center gap-1.5">
-                    <InputText v-model="searchQuery" class="min-w-0 flex-1" />
-                    <Button v-if="searchQuery" label="清空" severity="secondary" text @click="searchQuery = ''" />
-                </div>
-                <div v-if="searchQuery && searchQuery.length > 0" class="flex min-w-0 items-center gap-3">
-                    <span>{{ totalForCell1.total }}</span>
-                    <span>Count of Entries: {{ totalForCell1.count }}</span>
-                </div>
-                <Button label="解析" @click="parseMd" />
-            </div>
+            <Toolbar class="border-0 bg-transparent p-0">
+                <template #start>
+                    <ClearableInputText v-model="filters.global.value" class="min-w-0" fluid />
+                </template>
+                <template #center>
+                    <div v-if="hasGlobalFilter" class="flex min-w-0 items-center gap-3">
+                        <span>{{ totalForCell1.total }}</span>
+                        <span>Count of Entries: {{ totalForCell1.count }}</span>
+                    </div>
+                </template>
+                <template #end>
+                    <Button label="解析" @click="parseMd" />
+                </template>
+            </Toolbar>
         </template>
-
-        <div class="flex h-full flex-col gap-3">
+        <template #empty>
             <Message v-if="errorMessage" severity="error" :closable="false">{{ errorMessage }}</Message>
-            <DataTable :value="filteredData" scrollable scroll-height="flex"
-                :virtual-scroller-options="{ itemSize: 44 }" class="min-h-0 flex-1" :pt="{ tableContainer: 'h-full' }">
-                <Column v-for="column in columns" :key="column.dataKey" :field="column.dataKey" :header="column.title"
-                    :style="getColumnStyle(column.width)" />
-            </DataTable>
-        </div>
-    </Card>
+            <div class="py-6 text-center text-(--p-text-muted-color)">暂无数据</div>
+        </template>
+        <template #loading>Loading</template>
+        <Column field="index" filterField="index" header="#" :showFilterMenu="false">
+            <template #filter="{ filterModel, filterCallback }">
+                <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
+                    @clear="filterCallback()" fluid />
+            </template>
+        </Column>
+        <Column field="cell-0" filterField="cell-0" header="Column 1" :showFilterMenu="false">
+            <template #filter="{ filterModel, filterCallback }">
+                <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
+                    @clear="filterCallback()" fluid />
+            </template>
+        </Column>
+        <Column field="cell-1" filterField="cell-1" header="Column 2" :showFilterMenu="false">
+            <template #filter="{ filterModel, filterCallback }">
+                <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
+                    @clear="filterCallback()" fluid />
+            </template>
+        </Column>
+        <Column field="cell-2" filterField="cell-2" header="Column 3" :showFilterMenu="false">
+            <template #filter="{ filterModel, filterCallback }">
+                <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
+                    @clear="filterCallback()" fluid />
+            </template>
+        </Column>
+        <Column field="cell-3" filterField="cell-3" header="Column 4" :showFilterMenu="false">
+            <template #filter="{ filterModel, filterCallback }">
+                <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
+                    @clear="filterCallback()" fluid />
+            </template>
+        </Column>
+    </DataTable>
 </template>

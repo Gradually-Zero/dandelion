@@ -3,19 +3,20 @@ import Tag from 'primevue/tag'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import Message from 'primevue/message'
-import * as monaco from 'monaco-editor'
 import Skeleton from 'primevue/skeleton'
 import { useToast } from 'primevue/usetoast'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { useConfirm } from 'primevue/useconfirm'
-import * as prettier from 'prettier-v2/standalone'
-import markdownPlugin from 'prettier-v2/parser-markdown'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js'
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
+import 'monaco-editor/esm/vs/basic-languages/markdown/markdown.contribution.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
-import { DEFAULT_EDITOR_THEME, normalizeEditorTheme, registerEditorThemes, type EditorThemeName } from '../monaco/themes'
+import { uiThemeMode } from '../utils/uiTheme'
+import { registerEditorThemes, } from '../monaco/themes'
+import type { EditorThemeName } from '../monaco/themes'
 
 declare global {
     interface Window {
@@ -50,7 +51,6 @@ const isSwitchDialogVisible = ref(false)
 const pendingFilePath = ref<string | null>(null)
 const ignoreSelectedChangePath = ref('')
 const editorWordWrap = ref<'on' | 'off'>('on')
-const editorTheme = ref<EditorThemeName>(DEFAULT_EDITOR_THEME)
 const hasLoadedEditorPreferences = ref(false)
 
 const editor = shallowRef<monaco.editor.IStandaloneCodeEditor>()
@@ -59,6 +59,8 @@ const resizeObserver = shallowRef<ResizeObserver>()
 const formatProviderDisposable = shallowRef<monaco.IDisposable>()
 let unlistenSelectedChange: (() => void) | undefined
 let unlistenCloseRequested: (() => void) | undefined
+let systemThemeQuery: MediaQueryList | undefined
+let removeSystemThemeListener: (() => void) | undefined
 let suppressModelUpdate = false
 let isLeaveConfirmOpen = false
 
@@ -126,8 +128,55 @@ const applyEditorWordWrap = (wordWrap: 'on' | 'off') => {
     editor.value?.updateOptions({ wordWrap })
 }
 
-const applyEditorTheme = (theme: EditorThemeName) => {
-    editorTheme.value = theme
+const getSystemEditorTheme = (matchesDark: boolean): EditorThemeName => {
+    return matchesDark ? 'vscode-dark-plus' : 'vs'
+}
+
+const applySystemEditorTheme = () => {
+    if (uiThemeMode.value === 'system') {
+        const theme = getSystemEditorTheme(systemThemeQuery?.matches ?? false)
+        monaco.editor.setTheme(theme)
+    }
+}
+
+const stopSystemThemeListener = () => {
+    removeSystemThemeListener?.()
+    removeSystemThemeListener = undefined
+    systemThemeQuery = undefined
+}
+
+const watchSystemEditorTheme = () => {
+    stopSystemThemeListener()
+
+    systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    applySystemEditorTheme()
+
+    const handleSystemThemeChange = () => {
+        applySystemEditorTheme()
+    }
+
+    if (systemThemeQuery.addEventListener) {
+        systemThemeQuery.addEventListener('change', handleSystemThemeChange)
+        removeSystemThemeListener = () => {
+            systemThemeQuery?.removeEventListener('change', handleSystemThemeChange)
+        }
+        return
+    }
+
+    systemThemeQuery.addListener(handleSystemThemeChange)
+    removeSystemThemeListener = () => {
+        systemThemeQuery?.removeListener(handleSystemThemeChange)
+    }
+}
+
+const applyUiThemeToEditorTheme = (mode: 'system' | 'light' | 'dark') => {
+    if (mode === 'system') {
+        watchSystemEditorTheme()
+        return
+    }
+
+    stopSystemThemeListener()
+    const theme = mode === 'dark' ? 'vscode-dark-plus' : 'vs'
     monaco.editor.setTheme(theme)
 }
 
@@ -211,17 +260,12 @@ const loadCurrentSelection = async () => {
 
 const loadEditorPreferences = async () => {
     try {
-        const [wordWrap, theme] = await Promise.all([
-            invoke<string>('get_editor_word_wrap'),
-            invoke<string>('get_editor_theme')
-        ])
+        const wordWrap = await invoke<string>('get_editor_word_wrap')
 
-        applyEditorTheme(normalizeEditorTheme(theme))
         applyEditorWordWrap(normalizeWordWrap(wordWrap))
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         showError(`编辑器配置加载失败: ${message}`)
-        applyEditorTheme(DEFAULT_EDITOR_THEME)
         applyEditorWordWrap('on')
     } finally {
         hasLoadedEditorPreferences.value = true
@@ -250,9 +294,14 @@ const saveContent = async () => {
 }
 
 const formatMarkdown = async (source: string) => {
-    return prettier.format(source, {
+    const [{ format }, markdownPlugin] = await Promise.all([
+        import('prettier-v2/standalone'),
+        import('prettier-v2/parser-markdown')
+    ])
+
+    return format(source, {
         parser: 'markdown',
-        plugins: [markdownPlugin]
+        plugins: [markdownPlugin.default ?? markdownPlugin]
     })
 }
 
@@ -360,7 +409,7 @@ const initEditor = () => {
         return
     }
 
-    monaco.editor.setTheme(editorTheme.value)
+    applyUiThemeToEditorTheme(uiThemeMode.value)
     model.value = monaco.editor.createModel(draftContent.value, 'markdown')
     editor.value = monaco.editor.create(editorContainer.value, {
         model: model.value,
@@ -441,6 +490,7 @@ const initEditor = () => {
 
 onMounted(async () => {
     window.addEventListener('beforeunload', handleBeforeUnload)
+    applyUiThemeToEditorTheme(uiThemeMode.value)
 
     unlistenCloseRequested = await appWindow.onCloseRequested(async (event) => {
         if (!isDirty.value) {
@@ -489,6 +539,14 @@ onMounted(async () => {
     await loadCurrentSelection()
 })
 
+watch(
+    uiThemeMode,
+    (mode) => {
+        applyUiThemeToEditorTheme(mode)
+    },
+    { flush: 'post' }
+)
+
 onBeforeRouteLeave(async (to, from) => {
     if (to.path === from.path) {
         return true
@@ -527,6 +585,7 @@ watch(
 
 onBeforeUnmount(() => {
     window.removeEventListener('beforeunload', handleBeforeUnload)
+    stopSystemThemeListener()
     unlistenSelectedChange?.()
     unlistenCloseRequested?.()
     formatProviderDisposable.value?.dispose()
@@ -537,8 +596,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="flex h-full flex-col overflow-hidden rounded-md border border-(--p-surface-200) bg-(--p-surface-0)">
-        <header class="flex-none border-b border-(--p-surface-200) px-4 py-3.5">
+    <div
+        class="flex h-full flex-col overflow-hidden rounded-md border border-(--p-content-border-color) bg-(--p-content-background)">
+        <header class="flex-none border-b border-(--p-content-border-color) px-4 py-3.5">
             <div class="flex items-center justify-between gap-4">
                 <div class="flex min-w-0 items-center gap-3">
                     <span class="shrink-0 text-(--p-text-muted-color)">当前文件</span>
@@ -571,7 +631,7 @@ onBeforeUnmount(() => {
                 <div v-if="isLoading" class="space-y-3 p-3">
                     <Skeleton v-for="row in 6" :key="row" height="1.5rem" />
                 </div>
-                <div ref="editorContainer" class="h-full border border-(--p-surface-200) transition-opacity"
+                <div ref="editorContainer" class="h-full border border-(--p-content-border-color) transition-opacity"
                     :class="{ 'pointer-events-none opacity-35': isLoading }" />
             </div>
         </section>

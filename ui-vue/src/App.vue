@@ -1,11 +1,19 @@
 <script setup lang="ts">
+import Menu from 'primevue/menu'
 import Toast from 'primevue/toast'
 import { useRoute, useRouter } from 'vue-router'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch, } from 'vue'
 import { FileCode, House, Minus, Search, Settings, Square, X } from '@lucide/vue'
 import WindowRestoreIcon from '@/components/WindowRestoreIcon.vue'
+import type { Component } from 'vue'
+import type { MenuItem } from 'primevue/menuitem'
+
+interface NavigationMenuItem extends MenuItem {
+    path: string
+    iconComponent: Component
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -22,13 +30,6 @@ const routeTitleMap: Record<string, string> = {
 }
 
 const currentPageTitle = computed(() => routeTitleMap[route.path] ?? 'dandelion')
-const menuItems = [
-    { path: '/', label: 'Home', icon: House },
-    { path: '/find', label: 'Find', icon: Search },
-    { path: '/editor', label: 'Editor', icon: FileCode },
-    { path: '/conf', label: 'Configuration', icon: Settings }
-]
-
 const navigateTo = async (path: string) => {
     if (route.path === path) {
         return
@@ -36,6 +37,13 @@ const navigateTo = async (path: string) => {
 
     await router.push(path)
 }
+
+const menuItems: NavigationMenuItem[] = [
+    { path: '/', label: 'Home', iconComponent: House, command: () => { void navigateTo('/') } },
+    { path: '/find', label: 'Find', iconComponent: Search, command: () => { void navigateTo('/find') } },
+    { path: '/editor', label: 'Editor', iconComponent: FileCode, command: () => { void navigateTo('/editor') } },
+    { path: '/conf', label: 'Configuration', iconComponent: Settings, command: () => { void navigateTo('/conf') } }
+]
 
 const syncMaximizedState = async () => {
     isMaximized.value = await appWindow.isMaximized()
@@ -81,25 +89,25 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="flex h-screen flex-col overflow-hidden bg-(--p-surface-50) text-(--p-text-color)">
+    <div class="flex h-screen flex-col overflow-hidden bg-(--p-content-background) text-(--p-text-color)">
         <header
-            class="grid h-11 select-none grid-cols-[200px_minmax(0,1fr)_auto] items-center border-b border-(--p-surface-200) bg-[color-mix(in_srgb,var(--p-surface-0)_94%,var(--p-primary-color)_6%)]">
-            <div class="flex h-full min-w-0 items-center border-r border-(--p-surface-200) px-3.5"
+            class="grid h-11 select-none grid-cols-[200px_minmax(0,1fr)_auto] items-center border-b border-(--p-content-border-color) bg-(--p-content-background)">
+            <div class="flex h-full min-w-0 items-center border-r border-(--p-content-border-color) px-3.5"
                 data-tauri-drag-region @dblclick="handleTitlebarDoubleClick">
-                <span class="truncate text-[13px] font-semibold uppercase tracking-[0.08em]">dandelion</span>
+                <span class="truncate text-[14px] font-semibold uppercase tracking-[0.08em]">dandelion</span>
             </div>
             <div class="flex h-full min-w-0 items-center px-3.5" data-tauri-drag-region
                 @dblclick="handleTitlebarDoubleClick">
-                <span class="truncate text-[13px] text-(--p-text-muted-color)">{{ currentPageTitle }}</span>
+                <span class="truncate text-[14px] text-(--p-text-muted-color)">{{ currentPageTitle }}</span>
             </div>
             <div class="flex h-full items-stretch">
                 <button
-                    class="inline-flex w-12 cursor-pointer items-center justify-center border-0 bg-transparent text-(--p-text-color) transition-colors hover:bg-[color-mix(in_srgb,var(--p-surface-100)_86%,var(--p-primary-color)_14%)]"
+                    class="inline-flex w-12 cursor-pointer items-center justify-center border-0 bg-transparent text-(--p-text-color) transition-colors hover:bg-(--p-content-hover-background)"
                     type="button" aria-label="最小化" @click="minimizeWindow">
                     <Minus class="block h-4.5 w-4.5" :size="18" />
                 </button>
                 <button
-                    class="inline-flex w-12 cursor-pointer items-center justify-center border-0 bg-transparent text-(--p-text-color) transition-colors hover:bg-[color-mix(in_srgb,var(--p-surface-100)_86%,var(--p-primary-color)_14%)]"
+                    class="inline-flex w-12 cursor-pointer items-center justify-center border-0 bg-transparent text-(--p-text-color) transition-colors hover:bg-(--p-content-hover-background)"
                     type="button" :aria-label="isMaximized ? '还原窗口' : '最大化窗口'" @click="toggleWindowMaximize">
                     <WindowRestoreIcon v-if="isMaximized" class="block" :size="16" />
                     <Square v-else class="block" :size="16" />
@@ -113,20 +121,31 @@ onBeforeUnmount(() => {
         </header>
 
         <div class="grid min-h-0 flex-1 grid-cols-[200px_minmax(0,1fr)]">
-            <aside class="min-w-0 border-r border-(--p-surface-200) bg-(--p-surface-0)">
-                <nav class="flex flex-col gap-0.5 p-2" aria-label="主导航">
-                    <button v-for="item in menuItems" :key="item.path"
-                        class="flex min-h-10 w-full cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2.5 text-left text-(--p-text-color) transition-colors hover:bg-(--p-surface-100)"
-                        :class="current === item.path
-                            ? 'bg-[color-mix(in_srgb,var(--p-primary-color)_12%,var(--p-surface-0))] text-(--p-primary-color)'
-                            : ''" type="button" @click="navigateTo(item.path)">
-                        <component :is="item.icon"
-                            class="inline-flex h-[1em] w-[1em] shrink-0 items-center justify-center" />
-                        <span>{{ item.label }}</span>
-                    </button>
+            <aside class="min-w-0 border-r border-(--p-content-border-color) bg-(--p-content-background)">
+                <nav class="flex min-w-0 flex-col gap-0.5 overflow-hidden p-2" aria-label="主导航">
+                    <Menu :model="menuItems"
+                        class="box-border w-full min-w-0 max-w-full overflow-hidden border-0 bg-transparent p-0"
+                        :style="{ width: '100%', minWidth: 0 }" :pt="{
+                            list: 'm-0 flex w-full min-w-0 list-none flex-col gap-0.5 p-0',
+                            item: 'm-0 w-full min-w-0',
+                            itemContent: 'w-full min-w-0 rounded-md',
+                            itemLink: 'box-border w-full min-w-0'
+                        }">
+                        <template #item="{ item, props }">
+                            <a v-bind="props.action"
+                                class="box-border flex min-h-10 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-2.5 text-left text-(--p-text-color) no-underline transition-colors hover:bg-(--p-content-hover-background)"
+                                :class="current === item.path
+                                    ? 'bg-(--p-highlight-background) text-(--p-highlight-color)'
+                                    : ''">
+                                <component :is="item.iconComponent"
+                                    class="inline-flex h-[1em] w-[1em] shrink-0 items-center justify-center" />
+                                <span class="min-w-0 truncate">{{ item.label }}</span>
+                            </a>
+                        </template>
+                    </Menu>
                 </nav>
             </aside>
-            <main class="min-h-0 min-w-0 overflow-hidden p-4"><router-view /></main>
+            <main class="min-h-0 min-w-0 p-4"><router-view /></main>
         </div>
         <Toast />
         <ConfirmDialog />
