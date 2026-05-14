@@ -52,12 +52,12 @@ const tableRows = computed<FindTableRow[]>(() => {
     return tableData.value.map((row, index) => ({ index: index + 1, ...row }))
 })
 
-const hasGlobalFilter = computed(() => {
-    return Boolean(filters.value.global.value?.trim())
+const hasActiveFilter = computed(() => {
+    return Object.values(filters.value).some((filter) => Boolean(filter.value?.trim()))
 })
 
 const totalForCell1 = computed(() => {
-    if (!hasGlobalFilter.value) {
+    if (!hasActiveFilter.value) {
         return { total: 0, count: 0 }
     }
 
@@ -147,7 +147,7 @@ onBeforeUnmount(() => {
                     <ClearableInputText v-model="filters.global.value" class="min-w-0" :disabled="isLoading" fluid />
                 </template>
                 <template #center>
-                    <div v-if="hasGlobalFilter" class="flex min-w-0 items-center gap-3">
+                    <div v-if="hasActiveFilter" class="flex min-w-0 items-center gap-3">
                         <span>{{ totalForCell1.total }}</span>
                         <span>Count of Entries: {{ totalForCell1.count }}</span>
                     </div>
