@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath, URL } from 'node:url';
 
 const host = process.env.TAURI_DEV_HOST;
+const KB = 1024;
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -11,15 +12,22 @@ export default defineConfig({
   build: {
     rolldownOptions: {
       output: {
-        codeSplitting: true,
-        manualChunks(id) {
-          if (id.includes('monaco-editor')) {
-            return 'monaco-editor';
-          }
-
-          if (id.includes('prettier')) {
-            return 'prettier';
-          }
+        strictExecutionOrder: true,
+        codeSplitting: {
+          minSize: 100 * KB,
+          maxSize: 480 * KB,
+          groups: [
+            {
+              name: 'monaco-editor',
+              test: /[\\/]node_modules[\\/]monaco-editor[\\/]/,
+              priority: 30,
+            },
+            {
+              name: 'prettier',
+              test: /[\\/]node_modules[\\/](prettier|prettier-v2)[\\/]/,
+              priority: 20,
+            },
+          ],
         },
       },
     },
