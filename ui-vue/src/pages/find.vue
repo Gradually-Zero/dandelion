@@ -8,7 +8,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { FilterMatchMode } from '@primevue/core/api';
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { getFirstTableData } from '@/utils'
+import { getErrorMessage, getFirstTableData } from '@/utils'
 import ClearableInputText from '@/components/ClearableInputText.vue'
 import type { MdastNode } from '@/types/ast'
 import type { DataTableFilterEvent } from 'primevue/datatable'
@@ -45,6 +45,7 @@ const globalFilterFields = ['index', 'cell-0', 'cell-1', 'cell-2', 'cell-3']
 const tableData = ref<TableDataRow[]>([])
 const filteredRows = ref<FindTableRow[]>([])
 const errorMessage = ref<string>('')
+const isLoading = ref(false)
 let unlistenSelectedChange: (() => void) | undefined
 
 const tableRows = computed<FindTableRow[]>(() => {
@@ -81,6 +82,7 @@ const clearTableState = () => {
 
 const parseMd = async () => {
     try {
+        isLoading.value = true
         errorMessage.value = ''
         const temp = await invoke<string>('get_markdown_ast')
         const ast: MdastNode = JSON.parse(temp)
@@ -88,11 +90,9 @@ const parseMd = async () => {
         tableData.value = firstTableData
     } catch (error) {
         tableData.value = []
-        if (error instanceof Error) {
-            errorMessage.value = '解析失败: ' + error.message
-        } else {
-            errorMessage.value = '解析失败: 未知错误'
-        }
+        errorMessage.value = '解析失败: ' + getErrorMessage(error)
+    } finally {
+        isLoading.value = false
     }
 }
 
@@ -110,11 +110,7 @@ const refreshFromSelection = async (selectedFilePath?: string) => {
         }
     } catch (error) {
         clearTableState()
-        if (error instanceof Error) {
-            errorMessage.value = '解析失败: ' + error.message
-        } else {
-            errorMessage.value = '解析失败: 未知错误'
-        }
+        errorMessage.value = '解析失败: ' + getErrorMessage(error)
         return
     }
 
@@ -144,11 +140,11 @@ onBeforeUnmount(() => {
 <template>
     <DataTable v-model:filters="filters" :value="tableRows" :globalFilterFields="globalFilterFields" filterDisplay="row"
         scrollable scroll-height="flex" :virtual-scroller-options="{ itemSize: 44 }" :pt="{ tableContainer: 'h-full' }"
-        @filter="handleFilter">
+        :loading="isLoading" @filter="handleFilter">
         <template #header>
             <Toolbar class="border-0 bg-transparent p-0">
                 <template #start>
-                    <ClearableInputText v-model="filters.global.value" class="min-w-0" fluid />
+                    <ClearableInputText v-model="filters.global.value" class="min-w-0" :disabled="isLoading" fluid />
                 </template>
                 <template #center>
                     <div v-if="hasGlobalFilter" class="flex min-w-0 items-center gap-3">
@@ -157,43 +153,45 @@ onBeforeUnmount(() => {
                     </div>
                 </template>
                 <template #end>
-                    <Button label="解析" @click="parseMd" />
+                    <Button label="解析" :loading="isLoading" :disabled="isLoading" @click="parseMd" />
                 </template>
             </Toolbar>
         </template>
         <template #empty>
-            <Message v-if="errorMessage" severity="error" :closable="false">{{ errorMessage }}</Message>
-            <div class="py-6 text-center text-(--p-text-muted-color)">暂无数据</div>
+            <template v-if="!isLoading">
+                <Message v-if="errorMessage" severity="error" :closable="false">{{ errorMessage }}</Message>
+                <div v-else class="py-6 text-center text-(--p-text-muted-color)">暂无数据</div>
+            </template>
         </template>
-        <template #loading>Loading</template>
+        <template #loading>解析中...</template>
         <Column field="index" filterField="index" header="#" :showFilterMenu="false">
             <template #filter="{ filterModel, filterCallback }">
                 <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
-                    @clear="filterCallback()" fluid />
+                    @clear="filterCallback()" :disabled="isLoading" fluid />
             </template>
         </Column>
         <Column field="cell-0" filterField="cell-0" header="Column 1" :showFilterMenu="false">
             <template #filter="{ filterModel, filterCallback }">
                 <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
-                    @clear="filterCallback()" fluid />
+                    @clear="filterCallback()" :disabled="isLoading" fluid />
             </template>
         </Column>
         <Column field="cell-1" filterField="cell-1" header="Column 2" :showFilterMenu="false">
             <template #filter="{ filterModel, filterCallback }">
                 <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
-                    @clear="filterCallback()" fluid />
+                    @clear="filterCallback()" :disabled="isLoading" fluid />
             </template>
         </Column>
         <Column field="cell-2" filterField="cell-2" header="Column 3" :showFilterMenu="false">
             <template #filter="{ filterModel, filterCallback }">
                 <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
-                    @clear="filterCallback()" fluid />
+                    @clear="filterCallback()" :disabled="isLoading" fluid />
             </template>
         </Column>
         <Column field="cell-3" filterField="cell-3" header="Column 4" :showFilterMenu="false">
             <template #filter="{ filterModel, filterCallback }">
                 <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
-                    @clear="filterCallback()" fluid />
+                    @clear="filterCallback()" :disabled="isLoading" fluid />
             </template>
         </Column>
     </DataTable>

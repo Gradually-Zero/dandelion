@@ -55,7 +55,7 @@ pub fn set_ui_theme(app: AppHandle, theme: String) -> Result<(), ConfigError> {
 }
 
 #[command]
-pub fn get_markdown_ast(app: AppHandle) -> Result<String, MarkdownParseError> {
+pub async fn get_markdown_ast(app: AppHandle) -> Result<String, MarkdownParseError> {
     let selected_file_path = DdlConf::get_selected_file_path(&app)
         .map_err(|e| MarkdownParseError { message: e.message })?;
     if selected_file_path.is_empty() {
@@ -63,7 +63,12 @@ pub fn get_markdown_ast(app: AppHandle) -> Result<String, MarkdownParseError> {
             message: "selected file path is null".to_string(),
         });
     }
-    parse_markdown(&selected_file_path)
+
+    tauri::async_runtime::spawn_blocking(move || parse_markdown(&selected_file_path))
+        .await
+        .map_err(|e| MarkdownParseError {
+            message: format!("failed to join markdown parse task: {}", e),
+        })?
 }
 
 #[command]

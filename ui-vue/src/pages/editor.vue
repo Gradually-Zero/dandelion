@@ -14,6 +14,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js'
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import 'monaco-editor/esm/vs/basic-languages/markdown/markdown.contribution.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { getErrorMessage } from '../utils'
 import { uiThemeMode } from '../utils/uiTheme'
 import { registerEditorThemes, } from '../monaco/themes'
 import type { EditorThemeName } from '../monaco/themes'
@@ -184,7 +185,7 @@ const persistEditorWordWrap = async (wordWrap: 'on' | 'off') => {
     try {
         await invoke('set_editor_word_wrap', { wordWrap })
     } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
+        const message = getErrorMessage(error)
         showError(`配置保存失败: ${message}`)
     }
 }
@@ -228,7 +229,7 @@ const readSelectedFile = async (filePath: string) => {
         const content = await invoke<string>('read_selected_file_content')
         applyLoadedContent(filePath, content)
     } catch (error) {
-        loadError.value = error instanceof Error ? error.message : String(error)
+        loadError.value = getErrorMessage(error)
         currentFilePath.value = filePath
         savedContent.value = ''
         draftContent.value = ''
@@ -251,7 +252,7 @@ const loadCurrentSelection = async () => {
 
         await readSelectedFile(selectedFilePath)
     } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
+        const message = getErrorMessage(error)
         resetEditorState()
         loadError.value = message
         showError(`文件选择状态加载失败: ${message}`)
@@ -264,7 +265,7 @@ const loadEditorPreferences = async () => {
 
         applyEditorWordWrap(normalizeWordWrap(wordWrap))
     } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
+        const message = getErrorMessage(error)
         showError(`编辑器配置加载失败: ${message}`)
         applyEditorWordWrap('on')
     } finally {
@@ -285,7 +286,7 @@ const saveContent = async () => {
         showSuccess('文件已保存')
         return true
     } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
+        const message = getErrorMessage(error)
         showError(message)
         return false
     } finally {
@@ -477,7 +478,7 @@ const initEditor = () => {
                         }
                     ]
                 } catch (error) {
-                    const message = error instanceof Error ? error.message : String(error)
+                    const message = getErrorMessage(error)
                     showError(`格式化失败: ${message}`)
                     return []
                 } finally {
@@ -618,7 +619,7 @@ onBeforeUnmount(() => {
 
             <div v-else-if="loadError" class="flex h-full flex-col items-center justify-center gap-3.5 text-center">
                 <Message severity="error" :closable="false">
-                    <strong>文件加载失败</strong>
+                    <strong>文件加载失败：</strong>
                     <span>{{ loadError }}</span>
                 </Message>
                 <div class="flex flex-wrap items-center justify-end gap-2">

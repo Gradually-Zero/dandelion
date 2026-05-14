@@ -147,7 +147,7 @@ onBeforeUnmount(() => {
             </aside>
             <main class="min-h-0 min-w-0 p-4"><router-view /></main>
         </div>
-        <Toast />
+        <Toast position="top-center" />
         <ConfirmDialog />
     </div>
 </template>
