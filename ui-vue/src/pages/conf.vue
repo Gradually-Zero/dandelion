@@ -64,7 +64,7 @@ const selectFile = async () => {
         <div class="flex items-center gap-2">
             <div class="shrink-0 w-50">选择的文件</div>
             <div class="flex items-center gap-2 flex-1 min-w-0">
-                <div>{{ selected_file }}</div>
+                <div v-if="selected_file">{{ selected_file }}</div>
                 <Button label="选择文件" @click="selectFile" class="shrink-0" />
             </div>
         </div>

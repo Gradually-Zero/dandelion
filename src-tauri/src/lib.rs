@@ -1,6 +1,7 @@
 mod ddl;
 
 use ddl::{run, window_state};
+use tauri_plugin_log::TimezoneStrategy;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -11,6 +12,7 @@ pub fn run() {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
+                        .timezone_strategy(TimezoneStrategy::UseLocal)
                         .level(log::LevelFilter::Info)
                         .build(),
                 )?;
