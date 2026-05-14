@@ -164,31 +164,31 @@ onBeforeUnmount(() => {
             </template>
         </template>
         <template #loading>解析中...</template>
-        <Column field="index" filterField="index" header="#" :showFilterMenu="false">
+        <Column field="index" filterField="index" header="#" :showFilterMenu="false" class="min-w-37.5 w-37.5">
             <template #filter="{ filterModel, filterCallback }">
                 <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
                     @clear="filterCallback()" :disabled="isLoading" fluid />
             </template>
         </Column>
-        <Column field="cell-0" filterField="cell-0" header="Column 1" :showFilterMenu="false">
+        <Column field="cell-0" filterField="cell-0" header="Column 1" :showFilterMenu="false" class="min-w-37.5 w-37.5">
             <template #filter="{ filterModel, filterCallback }">
                 <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
                     @clear="filterCallback()" :disabled="isLoading" fluid />
             </template>
         </Column>
-        <Column field="cell-1" filterField="cell-1" header="Column 2" :showFilterMenu="false">
+        <Column field="cell-1" filterField="cell-1" header="Column 2" :showFilterMenu="false" class="min-w-37.5 w-37.5">
             <template #filter="{ filterModel, filterCallback }">
                 <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
                     @clear="filterCallback()" :disabled="isLoading" fluid />
             </template>
         </Column>
-        <Column field="cell-2" filterField="cell-2" header="Column 3" :showFilterMenu="false">
+        <Column field="cell-2" filterField="cell-2" header="Column 3" :showFilterMenu="false" class="min-w-37.5 w-37.5">
             <template #filter="{ filterModel, filterCallback }">
                 <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
                     @clear="filterCallback()" :disabled="isLoading" fluid />
             </template>
         </Column>
-        <Column field="cell-3" filterField="cell-3" header="Column 4" :showFilterMenu="false">
+        <Column field="cell-3" filterField="cell-3" header="Column 4" :showFilterMenu="false" class="whitespace-nowrap">
             <template #filter="{ filterModel, filterCallback }">
                 <ClearableInputText v-model="filterModel.value" type="text" @input="filterCallback()"
                     @clear="filterCallback()" :disabled="isLoading" fluid />
