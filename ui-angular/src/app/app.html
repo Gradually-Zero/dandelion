@@ -1,0 +1,113 @@
+<div
+  class="flex h-screen flex-col overflow-hidden bg-(--p-content-background) text-(--p-text-color)"
+>
+  <header
+    class="grid h-11 select-none grid-cols-[200px_minmax(0,1fr)_auto] items-center border-b border-(--p-content-border-color) bg-(--p-content-background)"
+  >
+    <div
+      class="flex h-full min-w-0 items-center border-r border-(--p-content-border-color) px-3.5"
+      data-tauri-drag-region
+      (dblclick)="handleTitlebarDoubleClick()"
+    >
+      <span class="truncate text-[14px] font-semibold uppercase tracking-[0.08em]">dandelion</span>
+    </div>
+    <div
+      class="flex h-full min-w-0 items-center px-3.5"
+      data-tauri-drag-region
+      (dblclick)="handleTitlebarDoubleClick()"
+    >
+      <span class="truncate text-[14px] text-(--p-text-muted-color)">{{ currentPageTitle() }}</span>
+    </div>
+    <div class="flex h-full items-stretch">
+      <button
+        class="inline-flex w-12 cursor-pointer items-center justify-center border-0 bg-transparent text-(--p-text-color) transition-colors hover:bg-(--p-content-hover-background)"
+        type="button"
+        aria-label="最小化"
+        (click)="minimizeWindow()"
+      >
+        <svg lucideMinus class="block h-4.5 w-4.5" [size]="18"></svg>
+      </button>
+      <button
+        class="inline-flex w-12 cursor-pointer items-center justify-center border-0 bg-transparent text-(--p-text-color) transition-colors hover:bg-(--p-content-hover-background)"
+        type="button"
+        [attr.aria-label]="isMaximized() ? '还原窗口' : '最大化窗口'"
+        (click)="toggleWindowMaximize()"
+      >
+        @if (isMaximized()) {
+          <app-window-restore-icon class="block" [size]="16"></app-window-restore-icon>
+        } @else {
+          <svg lucideSquare class="block" [size]="16"></svg>
+        }
+      </button>
+      <button
+        class="inline-flex w-12 cursor-pointer items-center justify-center border-0 bg-transparent text-(--p-text-color) transition-colors hover:bg-(--p-red-500) hover:text-white"
+        type="button"
+        aria-label="关闭窗口"
+        (click)="closeWindow()"
+      >
+        <svg lucideX class="block h-4.5 w-4.5" [size]="18"></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="grid min-h-0 flex-1 grid-cols-[200px_minmax(0,1fr)]">
+    <aside class="min-w-0 border-r border-(--p-content-border-color) bg-(--p-content-background)">
+      <nav class="flex min-w-0 flex-col gap-0.5 overflow-hidden p-2" aria-label="主导航">
+        <p-menu
+          [model]="menuItems"
+          styleClass="box-border w-full min-w-0 max-w-full overflow-hidden border-0 bg-transparent p-0"
+          [style]="{ width: '100%', minWidth: 0 }"
+          [pt]="{
+            list: 'm-0 flex w-full min-w-0 list-none flex-col gap-0.5 p-0',
+            item: 'm-0 w-full min-w-0',
+            itemContent: 'w-full min-w-0 rounded-md',
+            itemLink: 'box-border w-full min-w-0',
+          }"
+        >
+          <ng-template #item let-item>
+            <a
+              class="box-border flex min-h-10 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-2.5 text-left text-(--p-text-color) no-underline transition-colors hover:bg-(--p-content-hover-background)"
+              [ngClass]="
+                currentPath() === item.path
+                  ? 'bg-(--p-highlight-background) text-(--p-highlight-color)'
+                  : ''
+              "
+              (click)="navigateTo(item.path)"
+            >
+              @switch (item.iconKey) {
+                @case ('house') {
+                  <svg
+                    lucideHouse
+                    class="inline-flex h-[1em] w-[1em] shrink-0 items-center justify-center"
+                  ></svg>
+                }
+                @case ('search') {
+                  <svg
+                    lucideSearch
+                    class="inline-flex h-[1em] w-[1em] shrink-0 items-center justify-center"
+                  ></svg>
+                }
+                @case ('fileCode') {
+                  <svg
+                    lucideFileCode
+                    class="inline-flex h-[1em] w-[1em] shrink-0 items-center justify-center"
+                  ></svg>
+                }
+                @case ('settings') {
+                  <svg
+                    lucideSettings
+                    class="inline-flex h-[1em] w-[1em] shrink-0 items-center justify-center"
+                  ></svg>
+                }
+              }
+              <span class="min-w-0 truncate">{{ item.label }}</span>
+            </a>
+          </ng-template>
+        </p-menu>
+      </nav>
+    </aside>
+    <main class="min-h-0 min-w-0 p-4"><router-outlet /></main>
+  </div>
+  <p-toast position="top-center"></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+</div>

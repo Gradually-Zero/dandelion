@@ -8,10 +8,11 @@
   },
   "workspaces": {
     "packages": [
-      "ui-vue"
+      "ui-vue",
+      "ui-angular"
     ]
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.11.1"
+    "@tauri-apps/cli": "^2.11.2"
   }
 }

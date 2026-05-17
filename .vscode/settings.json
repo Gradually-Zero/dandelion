@@ -8,8 +8,18 @@
             ]
         ]
     },
+    "[html]": {
+        // 让 primeng 的 pt 支持 tailwindCSS
+        "tailwindCSS.experimental.classRegex": [
+            [
+                "\\[pt\\]\\s*=\\s*\"\\{([\\s\\S]*?)\\}\"",
+                "['\"`]([^'\"`]*)['\"`]"
+            ]
+        ]
+    },
     "files.associations": {
         // "*.css": "tailwindcss"
-        "**/ui-vue/src/**/*.css": "tailwindcss"
+        "**/ui-vue/src/**/*.css": "tailwindcss",
+        "**/ui-angular/src/**/*.css": "tailwindcss",
     }
 }

@@ -1,0 +1,12 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "dandelion",
+  "version": "0.0.1",
+  "identifier": "com.dandelion",
+  "build": {
+    "frontendDist": "../ui-angular/dist/ui-angular/browser",
+    "devUrl": "http://localhost:22431",
+    "beforeDevCommand": "bun -F ui-angular start",
+    "beforeBuildCommand": "bun -F ui-angular build"
+  }
+}
