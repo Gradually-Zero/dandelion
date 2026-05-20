@@ -1,0 +1,91 @@
+<p-table
+  [value]="filteredRows()"
+  [loading]="isLoading()"
+  [scrollable]="true"
+  scrollHeight="flex"
+  [virtualScroll]="true"
+  [virtualScrollItemSize]="44"
+  [virtualScrollOptions]="virtualScrollerOptions"
+  [pt]="tablePassThrough"
+  [rowTrackBy]="trackByIndex"
+>
+  <ng-template #caption>
+    <p-toolbar class="border-0 bg-transparent p-0">
+      <ng-template #start>
+        <app-clearable-input-text
+          class="min-w-0"
+          [value]="filters().global.value"
+          [disabled]="isLoading()"
+          [fluid]="true"
+          (valueChange)="setFilter('global', $event)"
+        />
+      </ng-template>
+      <ng-template #center>
+        @if (hasActiveFilter()) {
+          <div class="flex min-w-0 items-center gap-3">
+            <span>{{ totalForCell1().total }}</span>
+            <span>Count of Entries: {{ totalForCell1().count }}</span>
+          </div>
+        }
+      </ng-template>
+      <ng-template #end>
+        <p-button
+          label="解析"
+          [loading]="isLoading()"
+          [disabled]="isLoading()"
+          (onClick)="parseMd()"
+        />
+      </ng-template>
+    </p-toolbar>
+  </ng-template>
+
+  <ng-template #header>
+    <tr>
+      @for (column of columns; track column.field) {
+        <th [class]="column.className">{{ column.header }}</th>
+      }
+    </tr>
+    <tr>
+      @for (column of columns; track column.field) {
+        <th [class]="column.className">
+          <app-clearable-input-text
+            [value]="filters()[column.field].value"
+            [disabled]="isLoading()"
+            [fluid]="true"
+            (valueChange)="setFilter(column.field, $event)"
+          />
+        </th>
+      }
+    </tr>
+  </ng-template>
+
+  <ng-template #body let-row>
+    <tr>
+      @for (column of columns; track column.field) {
+        <td [class]="column.className">{{ row[column.field] }}</td>
+      }
+    </tr>
+  </ng-template>
+
+  <ng-template #loadingbody>
+    <tr>
+      <td [attr.colspan]="columns.length" class="py-6 text-center text-(--p-text-muted-color)">
+        解析中...
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template #emptymessage>
+    @if (!isLoading()) {
+      <tr>
+        <td [attr.colspan]="columns.length">
+          @if (errorMessage()) {
+            <p-message severity="error" [closable]="false">{{ errorMessage() }}</p-message>
+          } @else {
+            <div class="py-6 text-center text-(--p-text-muted-color)">暂无数据</div>
+          }
+        </td>
+      </tr>
+    }
+  </ng-template>
+</p-table>

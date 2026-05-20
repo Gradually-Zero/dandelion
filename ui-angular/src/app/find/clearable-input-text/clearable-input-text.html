@@ -1,0 +1,23 @@
+<span class="relative inline-flex items-center" [class.w-full]="fluid">
+  <input
+    #inputRef
+    pInputText
+    [type]="type"
+    [value]="value ?? ''"
+    [disabled]="disabled ?? false"
+    class="min-w-0"
+    [class.w-full]="fluid"
+    [class.pe-8]="canClear"
+    (input)="onInput($event)"
+  />
+  @if (canClear) {
+    <button
+      type="button"
+      class="absolute inset-e-1.5 top-1/2 inline-flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 font-[inherit] leading-none text-(--p-form-field-color) opacity-65 hover:bg-(--p-content-hover-background) hover:text-(--p-form-field-color) hover:opacity-100 focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-(--p-primary-color)"
+      aria-label="清空"
+      (click)="onClear($event)"
+    >
+      <svg lucideX aria-hidden="true" class="block h-3.5 w-3.5" [size]="14"></svg>
+    </button>
+  }
+</span>

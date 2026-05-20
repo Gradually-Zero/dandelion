@@ -1,0 +1,37 @@
+<div class="flex flex-col items-start gap-3 overflow-auto">
+  <div class="flex items-center gap-2">
+    <div class="w-50 shrink-0">选择的文件</div>
+    <div class="flex min-w-0 flex-1 items-center gap-2">
+      @if (selectedFile()) {
+        <div class="min-w-0 truncate">{{ selectedFile() }}</div>
+      }
+      <p-button label="选择文件" styleClass="shrink-0" (onClick)="selectFile()" />
+    </div>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <div class="w-50 shrink-0">主题</div>
+    <p-selectbutton
+      [ngModel]="uiThemeMode()"
+      [allowEmpty]="false"
+      [options]="themeOptions"
+      optionLabel="value"
+      optionValue="value"
+      (onChange)="changeUiTheme($event)"
+    >
+      <ng-template #item let-option>
+        @switch (option.value) {
+          @case ('system') {
+            <svg lucideSunMoon class="block h-3.5 w-3.5" [size]="14"></svg>
+          }
+          @case ('light') {
+            <svg lucideSun class="block h-3.5 w-3.5" [size]="14"></svg>
+          }
+          @case ('dark') {
+            <svg lucideMoon class="block h-3.5 w-3.5" [size]="14"></svg>
+          }
+        }
+      </ng-template>
+    </p-selectbutton>
+  </div>
+</div>

@@ -1,2 +1,6 @@
 @import 'tailwindcss';
 @custom-variant dark (&:where(.ddl-dark, .ddl-dark *));
+
+html {
+  line-height: normal;
+}

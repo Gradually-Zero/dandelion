@@ -1,10 +1,15 @@
+import {
+  ApplicationConfig,
+  inject,
+  provideAppInitializer,
+  provideBrowserGlobalErrorListeners,
+} from '@angular/core';
 import Aura from '@primeuix/themes/aura';
 import { provideRouter } from '@angular/router';
 import { providePrimeNG } from 'primeng/config';
 import { definePreset, palette } from '@primeuix/themes';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { routes } from './app.routes';
+import { UiThemeService } from './ui-theme.service';
 
 const CustomAura = definePreset(Aura, {
   semantic: {
@@ -33,8 +38,14 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    ConfirmationService,
-    MessageService,
+    provideAppInitializer(async () => {
+      const uiTheme = inject(UiThemeService);
+      try {
+        await uiTheme.loadUiTheme();
+      } catch (error) {
+        console.error('Failed to load ui theme:', error);
+      }
+    }),
     providePrimeNG({
       theme: {
         preset: CustomAura,
