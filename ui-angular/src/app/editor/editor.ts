@@ -436,12 +436,13 @@ export default class Editor implements OnInit, OnDestroy {
   }
 
   private async formatMarkdown(source: string) {
-    const [{ format }, markdownPlugin] = await Promise.all([
+    const [prettier, markdownPlugin] = await Promise.all([
       import('prettier-v2/standalone'),
       import('prettier-v2/parser-markdown'),
     ]);
+    const prettierModule = prettier.default ?? prettier;
 
-    return format(source, {
+    return prettierModule.format(source, {
       parser: 'markdown',
       plugins: [markdownPlugin.default ?? markdownPlugin],
     });
