@@ -4,3 +4,10 @@
 html {
   line-height: normal;
 }
+
+.workbench-hover-container:has(.monaco-hover.workbench-hover.compact):not(
+    :has(.hover-row.status-bar)
+  )
+  .hover-contents {
+  white-space: nowrap !important;
+}
